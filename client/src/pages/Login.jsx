@@ -1,134 +1,100 @@
-"use client"
+import { useState, useEffect } from "react"
+import { useAuth } from "../context/AuthContext"
+import { Link } from "react-router-dom"
+import styles from "../styles/Admin.module.css"
 
-import { useState, useContext } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { AuthContext } from "../context/AuthContext"
-import styles from "../styles/Login.module.css";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
 
+const AdminDashboard = () => {
+  const { user } = useAuth()
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
-  const [rememberMe, setRememberMe] = useState(false)
-  const [error, setError] = useState("")
-  const { login } = useContext(AuthContext)
-  const navigate = useNavigate()
+  useEffect(() => {
+    fetchDashboardStats()
+  }, [])
 
-  const { email, password } = formData
+  const fetchDashboardStats = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-
-    if (!email || !password) {
-      setError("Por favor complete todos los campos")
-      return
-    }
-
-    const success = await login(email, password)
-    if (success) {
-      navigate("/")
-    } else {
-      setError("Credenciales inválidas")
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      } else {
+        const errorText = await response.text()
+        console.error("Error en la respuesta:", errorText)
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
-return (
-  <div className={styles["login-container"]}>
-    <div className={styles["login-overlay"]}></div>
+  if (loading) {
+    return <div className={styles["admin-loading"]}>Cargando dashboard...</div>
+  }
 
-    <div className={styles["login-content"]}>
-      <div className={styles["login-welcome"]}>
-        <h1>
-          SAVE
-          <br />
-          your soul
-        </h1>
-        <p>La vida se ve mejor desde arriba ¿Empezamos?</p>
+  return (
+    <div className={styles["admin-dashboard"]}>
+      <div className={styles["admin-header"]}>
+        <h1>Panel de Administración</h1>
+        <p>Bienvenido, {user?.username || "Admin"}</p>
+      </div>
 
-        <div className={styles["social-icons"]}>
-          <a href="#" className={styles["social-icon"]}>
-            <i className="fab fa-facebook-f"></i>
-          </a>
-          <a href="#" className={styles["social-icon"]}>
-            <i className="fab fa-twitter"></i>
-          </a>
-          <a href="#" className={styles["social-icon"]}>
-            <i className="fab fa-instagram"></i>
-          </a>
+      <div className={styles["stats-grid"]}>
+        <div className={styles["stat-card"]}>
+          <h3>Usuarios Totales</h3>
+          <div className={styles["stat-number"]}>{stats?.users?.total_users || 0}</div>
+          <div className={styles["stat-subtitle"]}>+{stats?.users?.new_users_month || 0} este mes</div>
+        </div>
+
+        <div className={styles["stat-card"]}>
+          <h3>Publicaciones Totales</h3>
+          <div className={styles["stat-number"]}>{stats?.posts?.total_posts || 0}</div>
+          <div className={styles["stat-subtitle"]}>+{stats?.posts?.new_posts_month || 0} este mes</div>
+        </div>
+
+        <div className={styles["stat-card"]}>
+          <h3>Comentarios Totales</h3>
+          <div className={styles["stat-number"]}>{stats?.comments?.total_comments || 0}</div>
+          <div className={styles["stat-subtitle"]}>Total en la plataforma</div>
         </div>
       </div>
 
-      <div className={styles["login-form-container"]}>
-        <div className={styles["login-form-wrapper"]}>
-          <h2>Iniciar Sesión</h2>
+      <div className={styles["admin-actions"]}>
+        <div className={styles["action-card"]}>
+          <h3>Gestión de Usuarios</h3>
+          <p>Administrar usuarios y eliminar cuentas</p>
+          <Link to="/admin/users" className={styles["admin-btn"]}>
+            Gestionar Usuarios
+          </Link>
+        </div>
 
-          {error && <div className={styles["login-error"]}>{error}</div>}
+        <div className={styles["action-card"]}>
+          <h3>Gestión de Publicaciones</h3>
+          <p>Moderar y eliminar publicaciones</p>
+          <Link to="/admin/posts" className={styles["admin-btn"]}>
+            Gestionar Posts
+          </Link>
+        </div>
 
-          <form onSubmit={handleSubmit} className={styles["login-form"]}>
-            <div className={styles["form-group"]}>
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                value={email}
-                onChange={handleChange}
-                placeholder="Ingrese su email"
-              />
-            </div>
-
-            <div className={styles["form-group"]}>
-              <label htmlFor="password">Contraseña</label>
-              <input
-                type="password"
-                name="password"
-                id="password"
-                value={password}
-                onChange={handleChange}
-                placeholder="Ingrese su contraseña"
-              />
-            </div>
-
-            <div className={styles["form-options"]}>
-              <div className={styles["remember-me"]}>
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
-                />
-                <label htmlFor="rememberMe">Recordarme</label>
-              </div>
-              <Link to="/forgot-password" className={styles["forgot-password"]}>
-                ¿Olvidó su contraseña?
-              </Link>
-            </div>
-
-            <button type="submit" className={styles["login-button"]}>
-              Iniciar Sesión
-            </button>
-          </form>
-
-          <div className={styles["login-footer"]}>
-            <p>
-              ¿No tiene una cuenta? <Link to="/register">Regístrese</Link>
-            </p>
-            <div className={styles["terms"]}>
-              <Link to="/terms">Términos de servicio</Link> | <Link to="/privacy">Política de privacidad</Link>
-            </div>
-          </div>
+        <div className={styles["action-card"]}>
+          <h3>Gestión de Comentarios</h3>
+          <p>Moderar y eliminar comentarios</p>
+          <Link to="/admin/comments" className={styles["admin-btn"]}>
+            Gestionar Comentarios
+          </Link>
         </div>
       </div>
     </div>
-  </div>
-);
+  )
 }
 
-export default Login
+export default AdminDashboard
