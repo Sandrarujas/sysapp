@@ -1,144 +1,142 @@
-"use client"
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import styles from "../styles/Notifications.module.css";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import axios from "axios"
-import styles from "../styles/Notifications.module.css"
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
     totalPages: 0,
-  })
+  });
 
-  const [selectedNotification, setSelectedNotification] = useState(null)
-  const [showModal, setShowModal] = useState(false)
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const router = useRouter()
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         const res = await axios.get(
           `${API_BASE_URL}/api/notifications?page=${pagination.page}&limit=${pagination.limit}`
-        )
-        setNotifications(res.data.notifications)
-        setPagination(res.data.pagination)
-        setLoading(false)
+        );
+        setNotifications(res.data.notifications);
+        setPagination(res.data.pagination);
+        setLoading(false);
       } catch (error) {
-        console.error("Error al cargar notificaciones:", error)
-        setError("No se pudieron cargar las notificaciones")
-        setLoading(false)
+        console.error("Error al cargar notificaciones:", error);
+        setError("No se pudieron cargar las notificaciones");
+        setLoading(false);
       }
-    }
+    };
 
-    fetchNotifications()
-  }, [pagination.page, pagination.limit])
+    fetchNotifications();
+  }, [pagination.page, pagination.limit]);
 
   const markAsRead = async (id) => {
     try {
-      await axios.put(`${API_BASE_URL}/api/notifications/${id}/read`)
-      setNotifications(
-        notifications.map((notif) =>
+      await axios.put(`${API_BASE_URL}/api/notifications/${id}/read`);
+      setNotifications((prev) =>
+        prev.map((notif) =>
           notif.id === id ? { ...notif, isRead: true } : notif
         )
-      )
+      );
     } catch (error) {
-      console.error("Error al marcar notificación:", error)
+      console.error("Error al marcar notificación:", error);
     }
-  }
+  };
 
   const markAllAsRead = async () => {
     try {
-      await axios.put(`${API_BASE_URL}/api/notifications/read-all`)
-      setNotifications(notifications.map((notif) => ({ ...notif, isRead: true })))
+      await axios.put(`${API_BASE_URL}/api/notifications/read-all`);
+      setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
     } catch (error) {
-      console.error("Error al marcar todas las notificaciones:", error)
+      console.error("Error al marcar todas las notificaciones:", error);
     }
-  }
+  };
 
   const getNotificationContent = (notification) => {
-    const { type, senderUsername } = notification
+    const { type, senderUsername } = notification;
     switch (type) {
       case "like":
-        return `${senderUsername} le dio like a tu publicación`
+        return `${senderUsername} le dio like a tu publicación`;
       case "comment":
-        return `${senderUsername} comentó en tu publicación`
+        return `${senderUsername} comentó en tu publicación`;
       case "follow":
-        return `${senderUsername} comenzó a seguirte`
+        return `${senderUsername} comenzó a seguirte`;
       default:
-        return `Nueva notificación de ${senderUsername}`
+        return `Nueva notificación de ${senderUsername}`;
     }
-  }
+  };
 
   const getNotificationLink = (notification) => {
-    const { type, postId, senderUsername } = notification
+    const { type, postId, senderUsername } = notification;
     switch (type) {
       case "like":
       case "comment":
-        return `/post/${postId}`
+        return `/post/${postId}`;
       case "follow":
-        return `/profile/${senderUsername}`
+        return `/profile/${senderUsername}`;
       default:
-        return "#"
+        return "#";
     }
-  }
+  };
 
   const getNotificationIcon = (type) => {
-    const baseClass = styles["notification-icon"]
+    const baseClass = styles["notification-icon"];
     switch (type) {
       case "like":
-        return <i className={`${baseClass} ${styles["like"]} fas fa-heart`} />
+        return <i className={`${baseClass} ${styles["like"]} fas fa-heart`} />;
       case "comment":
-        return <i className={`${baseClass} ${styles["comment"]} fas fa-comment`} />
+        return <i className={`${baseClass} ${styles["comment"]} fas fa-comment`} />;
       case "follow":
-        return <i className={`${baseClass} ${styles["follow"]} fas fa-user-plus`} />
+        return <i className={`${baseClass} ${styles["follow"]} fas fa-user-plus`} />;
       default:
-        return <i className={`${baseClass} fas fa-bell`} />
+        return <i className={`${baseClass} fas fa-bell`} />;
     }
-  }
+  };
 
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.svg?height=40&width=40"
-    if (imagePath.startsWith("http")) return imagePath
-    return `${API_BASE_URL}${imagePath}`
-  }
+    if (!imagePath) return "/placeholder.svg?height=40&width=40";
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${API_BASE_URL}${imagePath}`;
+  };
 
   const openNotificationModal = (notification) => {
     if (!notification.isRead) {
-      markAsRead(notification.id)
+      markAsRead(notification.id);
     }
-    setSelectedNotification(notification)
-    setShowModal(true)
-  }
+    setSelectedNotification(notification);
+    setShowModal(true);
+  };
 
   const closeModal = () => {
-    setShowModal(false)
-    setSelectedNotification(null)
-  }
+    setShowModal(false);
+    setSelectedNotification(null);
+  };
 
   const navigateToContent = () => {
     if (selectedNotification) {
-      const link = getNotificationLink(selectedNotification)
-      closeModal()
-      router.push(link)
+      const link = getNotificationLink(selectedNotification);
+      closeModal();
+      navigate(link);
     }
-  }
+  };
 
   const navigateToUserProfile = () => {
     if (selectedNotification) {
-      closeModal()
-      router.push(`/profile/${selectedNotification.senderUsername}`)
+      closeModal();
+      navigate(`/profile/${selectedNotification.senderUsername}`);
     }
-  }
+  };
 
   return (
     <div className={styles["notifications-page"]}>
@@ -168,7 +166,7 @@ const Notifications = () => {
                   src={getImageUrl(notification.senderProfileImage)}
                   alt={notification.senderUsername}
                   onError={(e) => {
-                    e.target.src = "/placeholder.svg?height=40&width=40"
+                    e.target.src = "/placeholder.svg?height=40&width=40";
                   }}
                 />
                 {getNotificationIcon(notification.type)}
@@ -215,10 +213,7 @@ const Notifications = () => {
       )}
 
       {showModal && selectedNotification && (
-        <div
-          className={styles["notification-modal-overlay"]}
-          onClick={closeModal}
-        >
+        <div className={styles["notification-modal-overlay"]} onClick={closeModal}>
           <div
             className={styles["notification-modal"]}
             onClick={(e) => e.stopPropagation()}
@@ -236,7 +231,7 @@ const Notifications = () => {
                   alt={selectedNotification.senderUsername}
                   className={styles["notification-modal-avatar"]}
                   onError={(e) => {
-                    e.target.src = "/placeholder.svg?height=60&width=60"
+                    e.target.src = "/placeholder.svg?height=60&width=60";
                   }}
                 />
                 <div className={styles["notification-modal-user-info"]}>
@@ -273,7 +268,7 @@ const Notifications = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Notifications
+export default Notifications;

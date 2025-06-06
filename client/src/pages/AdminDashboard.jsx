@@ -1,8 +1,6 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
-import Link from "next/link"
+import { Link } from "react-router-dom"
 import styles from "../styles/Admin.module.css"
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
@@ -74,24 +72,24 @@ const AdminDashboard = () => {
         <div className={styles["action-card"]}>
           <h3>Gestión de Usuarios</h3>
           <p>Administrar usuarios y eliminar cuentas</p>
-          <Link href="/admin/users">
-            <a className={styles["admin-btn"]}>Gestionar Usuarios</a>
+          <Link to="/admin/users" className={styles["admin-btn"]}>
+            Gestionar Usuarios
           </Link>
         </div>
 
         <div className={styles["action-card"]}>
           <h3>Gestión de Publicaciones</h3>
           <p>Moderar y eliminar publicaciones</p>
-          <Link href="/admin/posts">
-            <a className={styles["admin-btn"]}>Gestionar Posts</a>
+          <Link to="/admin/posts" className={styles["admin-btn"]}>
+            Gestionar Posts
           </Link>
         </div>
 
         <div className={styles["action-card"]}>
           <h3>Gestión de Comentarios</h3>
           <p>Moderar y eliminar comentarios</p>
-          <Link href="/admin/comments">
-            <a className={styles["admin-btn"]}>Gestionar Comentarios</a>
+          <Link to="/admin/comments" className={styles["admin-btn"]}>
+            Gestionar Comentarios
           </Link>
         </div>
       </div>
