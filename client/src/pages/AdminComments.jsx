@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import styles from "../styles/Admin.module.css"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
 
 const AdminComments = () => {
   const [comments, setComments] = useState([])
