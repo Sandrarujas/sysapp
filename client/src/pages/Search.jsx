@@ -1,66 +1,68 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useLocation, Link } from "react-router-dom"
-import axios from "axios"
-import Post from "../components/Post"
+import { useState, useEffect } from "react";
+import { useLocation, Link } from "react-router-dom";
+import axios from "axios";
+import Post from "../components/Post";
+
+// ✅ Variable de entorno para la base de URL
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 const Search = () => {
-  const location = useLocation()
-  const searchParams = new URLSearchParams(location.search)
-  const query = searchParams.get("q") || ""
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const query = searchParams.get("q") || "";
 
-  const [activeTab, setActiveTab] = useState("users")
-  const [users, setUsers] = useState([])
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [activeTab, setActiveTab] = useState("users");
+  const [users, setUsers] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (!query) {
-        setLoading(false)
-        return
+        setLoading(false);
+        return;
       }
 
-      setLoading(true)
-      setError("")
+      setLoading(true);
+      setError("");
 
       try {
         if (activeTab === "users") {
-          const res = await axios.get(`http://localhost:5000/api/search/users?q=${query}`)
-          setUsers(res.data)
+          const res = await axios.get(`${API_BASE_URL}/api/search/users?q=${query}`);
+          setUsers(res.data);
         } else {
-          const res = await axios.get(`http://localhost:5000/api/search/posts?q=${query}`)
-          setPosts(res.data)
+          const res = await axios.get(`${API_BASE_URL}/api/search/posts?q=${query}`);
+          setPosts(res.data);
         }
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
-        console.error("Error en búsqueda:", error)
-        setError("Error al realizar la búsqueda")
-        setLoading(false)
+        console.error("Error en búsqueda:", error);
+        setError("Error al realizar la búsqueda");
+        setLoading(false);
       }
-    }
+    };
 
-    fetchSearchResults()
-  }, [query, activeTab])
+    fetchSearchResults();
+  }, [query, activeTab]);
 
   const handleFollow = async (userId, isFollowing, index) => {
     try {
       if (isFollowing) {
-        await axios.delete(`http://localhost:5000/api/users/${userId}/unfollow`)
+        await axios.delete(`${API_BASE_URL}/api/users/${userId}/unfollow`);
       } else {
-        await axios.post(`http://localhost:5000/api/users/${userId}/follow`)
+        await axios.post(`${API_BASE_URL}/api/users/${userId}/follow`);
       }
 
-      // Actualizar estado local
-      const updatedUsers = [...users]
-      updatedUsers[index].isFollowing = !isFollowing
-      setUsers(updatedUsers)
+      const updatedUsers = [...users];
+      updatedUsers[index].isFollowing = !isFollowing;
+      setUsers(updatedUsers);
     } catch (error) {
-      console.error("Error al seguir/dejar de seguir:", error)
+      console.error("Error al seguir/dejar de seguir:", error);
     }
-  }
+  };
 
   return (
     <div className="search-container">
@@ -86,7 +88,11 @@ const Search = () => {
               <div key={user.id} className="user-card">
                 <Link to={`/profile/${user.username}`} className="user-info">
                   <img
-                    src={user.profileImage ? `http://localhost:5000${user.profileImage}` : "/placeholder.svg?height=50&width=50"}
+                    src={
+                      user.profileImage
+                        ? `${API_BASE_URL}${user.profileImage}`
+                        : "/placeholder.svg?height=50&width=50"
+                    }
                     alt={user.username}
                     className="user-image"
                   />
@@ -117,7 +123,7 @@ const Search = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Search
+export default Search;

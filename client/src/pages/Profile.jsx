@@ -9,7 +9,8 @@ import EditProfileModal from "../components/EditProfileModal";
 
 import styles from "../styles/Profile.module.css";
 
-const BASE_URL = "http://localhost:5000";
+// ✅ Variable de entorno unificada para CRA
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 const Profile = () => {
   const { username } = useParams();
@@ -28,11 +29,11 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${BASE_URL}/api/users/${username}`);
+        const res = await axios.get(`${API_BASE_URL}/api/users/${username}`);
         setProfile(res.data);
         setIsFollowing(res.data.isFollowing);
 
-        const postsRes = await axios.get(`${BASE_URL}/api/posts/user/${username}`);
+        const postsRes = await axios.get(`${API_BASE_URL}/api/posts/user/${username}`);
         setPosts(postsRes.data);
 
         setLoading(false);
@@ -49,9 +50,9 @@ const Profile = () => {
   const handleFollow = async () => {
     try {
       if (isFollowing) {
-        await axios.delete(`${BASE_URL}/api/users/${profile.id}/unfollow`);
+        await axios.delete(`${API_BASE_URL}/api/users/${profile.id}/unfollow`);
       } else {
-        await axios.post(`${BASE_URL}/api/users/${profile.id}/follow`);
+        await axios.post(`${API_BASE_URL}/api/users/${profile.id}/follow`);
       }
       setIsFollowing(!isFollowing);
       setProfile({
@@ -89,7 +90,11 @@ const Profile = () => {
       <div className={styles["profile-header"]}>
         <div className={styles["profile-image-container"]}>
           <img
-            src={profile.profileImage ? `${BASE_URL}${profile.profileImage}` : "/placeholder.svg?height=150&width=150"}
+            src={
+              profile.profileImage
+                ? `${API_BASE_URL}${profile.profileImage}`
+                : "/placeholder.svg?height=150&width=150"
+            }
             alt={profile.username}
             className={styles["profile-image"]}
           />

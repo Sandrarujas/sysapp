@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import styles from "../styles/Notifications.module.css"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([])

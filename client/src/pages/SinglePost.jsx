@@ -16,7 +16,7 @@ const SinglePost = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  const baseUrl = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     if (!id) return;
