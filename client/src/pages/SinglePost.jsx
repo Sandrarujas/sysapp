@@ -1,16 +1,12 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import Post from "../components/Post";
 import styles from "../styles/Post.module.css";
 
 const SinglePost = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // Si usas query params, o ajusta según la ruta
+  const { id } = useParams(); // Usamos params de la ruta, asegúrate que la ruta es tipo /posts/:id
+  const navigate = useNavigate();
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +36,7 @@ const SinglePost = () => {
   }, [id, baseUrl]);
 
   const handleBack = () => {
-    router.back();
+    navigate(-1);
   };
 
   if (loading) {

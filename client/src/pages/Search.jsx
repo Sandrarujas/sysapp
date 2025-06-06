@@ -1,129 +1,100 @@
-"use client";
+import { useState, useEffect } from "react"
+import { useAuth } from "../context/AuthContext"
+import { Link } from "react-router-dom"
+import styles from "../styles/Admin.module.css"
 
-import { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
-import axios from "axios";
-import Post from "../components/Post";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
 
-// ✅ Variable de entorno para la base de URL
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
-
-const Search = () => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const query = searchParams.get("q") || "";
-
-  const [activeTab, setActiveTab] = useState("users");
-  const [users, setUsers] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const AdminDashboard = () => {
+  const { user } = useAuth()
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchSearchResults = async () => {
-      if (!query) {
-        setLoading(false);
-        return;
-      }
+    fetchDashboardStats()
+  }, [])
 
-      setLoading(true);
-      setError("");
-
-      try {
-        if (activeTab === "users") {
-          const res = await axios.get(`${API_BASE_URL}/api/search/users?q=${query}`);
-          setUsers(res.data);
-        } else {
-          const res = await axios.get(`${API_BASE_URL}/api/search/posts?q=${query}`);
-          setPosts(res.data);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error("Error en búsqueda:", error);
-        setError("Error al realizar la búsqueda");
-        setLoading(false);
-      }
-    };
-
-    fetchSearchResults();
-  }, [query, activeTab]);
-
-  const handleFollow = async (userId, isFollowing, index) => {
+  const fetchDashboardStats = async () => {
     try {
-      if (isFollowing) {
-        await axios.delete(`${API_BASE_URL}/api/users/${userId}/unfollow`);
-      } else {
-        await axios.post(`${API_BASE_URL}/api/users/${userId}/follow`);
-      }
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-      const updatedUsers = [...users];
-      updatedUsers[index].isFollowing = !isFollowing;
-      setUsers(updatedUsers);
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      } else {
+        const errorText = await response.text()
+        console.error("Error en la respuesta:", errorText)
+      }
     } catch (error) {
-      console.error("Error al seguir/dejar de seguir:", error);
+      console.error("Error fetching stats:", error)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
+
+  if (loading) {
+    return <div className={styles["admin-loading"]}>Cargando dashboard...</div>
+  }
 
   return (
-    <div className="search-container">
-      <h1>Resultados de búsqueda: "{query}"</h1>
-
-      <div className="search-tabs">
-        <button className={`tab-button ${activeTab === "users" ? "active" : ""}`} onClick={() => setActiveTab("users")}>
-          Usuarios
-        </button>
-        <button className={`tab-button ${activeTab === "posts" ? "active" : ""}`} onClick={() => setActiveTab("posts")}>
-          Publicaciones
-        </button>
+    <div className={styles["admin-dashboard"]}>
+      <div className={styles["admin-header"]}>
+        <h1>Panel de Administración</h1>
+        <p>Bienvenido, {user?.username || "Admin"}</p>
       </div>
 
-      {loading ? (
-        <div className="loading">Buscando...</div>
-      ) : error ? (
-        <div className="error">{error}</div>
-      ) : activeTab === "users" ? (
-        <div className="users-results">
-          {users.length > 0 ? (
-            users.map((user, index) => (
-              <div key={user.id} className="user-card">
-                <Link to={`/profile/${user.username}`} className="user-info">
-                  <img
-                    src={
-                      user.profileImage
-                        ? `${API_BASE_URL}${user.profileImage}`
-                        : "/placeholder.svg?height=50&width=50"
-                    }
-                    alt={user.username}
-                    className="user-image"
-                  />
-                  <div className="user-details">
-                    <h3 className="user-username">{user.username}</h3>
-                    <p className="user-bio">{user.bio || "Sin biografía"}</p>
-                  </div>
-                </Link>
-                <button
-                  className={`follow-button ${user.isFollowing ? "following" : ""}`}
-                  onClick={() => handleFollow(user.id, user.isFollowing, index)}
-                >
-                  {user.isFollowing ? "Dejar de Seguir" : "Seguir"}
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="no-results">No se encontraron usuarios con "{query}"</p>
-          )}
+      <div className={styles["stats-grid"]}>
+        <div className={styles["stat-card"]}>
+          <h3>Usuarios Totales</h3>
+          <div className={styles["stat-number"]}>{stats?.users?.total_users || 0}</div>
+          <div className={styles["stat-subtitle"]}>+{stats?.users?.new_users_month || 0} este mes</div>
         </div>
-      ) : (
-        <div className="posts-results">
-          {posts.length > 0 ? (
-            posts.map((post) => <Post key={post.id} post={post} />)
-          ) : (
-            <p className="no-results">No se encontraron publicaciones con "{query}"</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
-export default Search;
+        <div className={styles["stat-card"]}>
+          <h3>Publicaciones Totales</h3>
+          <div className={styles["stat-number"]}>{stats?.posts?.total_posts || 0}</div>
+          <div className={styles["stat-subtitle"]}>+{stats?.posts?.new_posts_month || 0} este mes</div>
+        </div>
+
+        <div className={styles["stat-card"]}>
+          <h3>Comentarios Totales</h3>
+          <div className={styles["stat-number"]}>{stats?.comments?.total_comments || 0}</div>
+          <div className={styles["stat-subtitle"]}>Total en la plataforma</div>
+        </div>
+      </div>
+
+      <div className={styles["admin-actions"]}>
+        <div className={styles["action-card"]}>
+          <h3>Gestión de Usuarios</h3>
+          <p>Administrar usuarios y eliminar cuentas</p>
+          <Link to="/admin/users" className={styles["admin-btn"]}>
+            Gestionar Usuarios
+          </Link>
+        </div>
+
+        <div className={styles["action-card"]}>
+          <h3>Gestión de Publicaciones</h3>
+          <p>Moderar y eliminar publicaciones</p>
+          <Link to="/admin/posts" className={styles["admin-btn"]}>
+            Gestionar Posts
+          </Link>
+        </div>
+
+        <div className={styles["action-card"]}>
+          <h3>Gestión de Comentarios</h3>
+          <p>Moderar y eliminar comentarios</p>
+          <Link to="/admin/comments" className={styles["admin-btn"]}>
+            Gestionar Comentarios
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default AdminDashboard
