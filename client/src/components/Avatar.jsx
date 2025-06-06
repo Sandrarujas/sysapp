@@ -1,19 +1,18 @@
-"use client";
 
-import { useState } from "react";
-import styles from "./Avatar.module.css";
+import { useState } from 'react';
+
+const BASE_URL = process.env.REACT_APP_API_URL || "";
 
 const Avatar = ({ src, username, size = 40, version = "" }) => {
   const [error, setError] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
   const getImageUrl = (imagePath) => {
-    if (!imagePath || error) return `/placeholder.svg?height=${size}&width=${size}`;
+    if (!imagePath || error) {
+      return `/placeholder.svg?height=${size}&width=${size}`;
+    }
 
-    const fullUrl = imagePath.startsWith("http")
-      ? imagePath
-      : `${baseUrl}${imagePath}`;
+    const isAbsolute = imagePath.startsWith("http") || imagePath.startsWith("//");
+    const fullUrl = isAbsolute ? imagePath : `${BASE_URL}${imagePath}`;
 
     return version ? `${fullUrl}?v=${version}` : fullUrl;
   };
@@ -22,12 +21,12 @@ const Avatar = ({ src, username, size = 40, version = "" }) => {
     <img
       src={getImageUrl(src)}
       alt={username || "Usuario"}
-      className={styles.avatarImage}
+      className="avatar-image"
       style={{
         width: `${size}px`,
         height: `${size}px`,
-        borderRadius: "50%",
-        objectFit: "cover",
+        borderRadius: '50%',
+        objectFit: 'cover'
       }}
       onError={() => setError(true)}
     />
