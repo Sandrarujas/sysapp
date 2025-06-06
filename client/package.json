@@ -12,6 +12,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "chmod +x node_modules/.bin/react-scripts",
     "build": "react-scripts build",
     "dev": "react-scripts start",
     "test": "react-scripts test",
