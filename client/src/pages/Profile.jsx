@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useContext } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import Post from "../components/Post";
@@ -9,11 +9,12 @@ import EditProfileModal from "../components/EditProfileModal";
 
 import styles from "../styles/Profile.module.css";
 
-const BASE_URL = "http://localhost:5000"; // Asegúrate de que esta URL está correctamente configurada
+const BASE_URL = "http://localhost:5000";
 
 const Profile = () => {
   const { username } = useParams();
   const { user } = useContext(AuthContext);
+
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        setLoading(true);
         const res = await axios.get(`${BASE_URL}/api/users/${username}`);
         setProfile(res.data);
         setIsFollowing(res.data.isFollowing);
@@ -68,31 +70,26 @@ const Profile = () => {
     });
   };
 
-  // Funciones para manejar actualizaciones y eliminaciones de posts
   const handlePostUpdate = (updatedPost) => {
-    console.log("Actualizando publicación:", updatedPost);
     setPosts((prevPosts) =>
       prevPosts.map((post) => (post.id === updatedPost.id ? { ...post, ...updatedPost } : post))
     );
   };
 
   const handlePostDelete = (postId) => {
-    console.log("Eliminando publicación:", postId);
     setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
   };
 
-  if (loading) return <div className={styles["loading"]}>Cargando perfil...</div>;
-  if (error) return <div className={styles["error"]}>{error}</div>;
-  if (!profile) return <div className={styles["error"]}>Usuario no encontrado</div>;
+  if (loading) return <div className={styles.loading}>Cargando perfil...</div>;
+  if (error) return <div className={styles.error}>{error}</div>;
+  if (!profile) return <div className={styles.error}>Usuario no encontrado</div>;
 
   return (
     <div className={styles["profile-container"]}>
       <div className={styles["profile-header"]}>
         <div className={styles["profile-image-container"]}>
           <img
-            src={
-              profile.profileImage ? `${BASE_URL}${profile.profileImage}` : "/placeholder.svg?height=150&width=150"
-            }
+            src={profile.profileImage ? `${BASE_URL}${profile.profileImage}` : "/placeholder.svg?height=150&width=150"}
             alt={profile.username}
             className={styles["profile-image"]}
           />

@@ -3,6 +3,8 @@
 import { createContext, useState, useEffect, useCallback, useContext } from "react"
 import axios from "axios"
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
+
 export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
@@ -21,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
       try {
         setNotificationsLoading(true)
-        const res = await axios.get(`http://localhost:5000/api/notifications?limit=${limit}`)
+        const res = await axios.get(`${API_BASE_URL}/api/notifications?limit=${limit}`)
         setNotifications(res.data.notifications)
         setUnreadCount(res.data.unreadCount)
         return res.data
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem("token")
         if (token) {
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
-          const res = await axios.get("http://localhost:5000/api/auth/me")
+          const res = await axios.get(`${API_BASE_URL}/api/auth/me`)
           setUser({
             id: res.data.id,
             username: res.data.username,
@@ -76,7 +78,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password })
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password })
       localStorage.setItem("token", res.data.token)
       axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`
       setUser({
@@ -93,7 +95,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
+      const res = await axios.post(`${API_BASE_URL}/api/auth/register`, {
         username,
         email,
         password,
@@ -132,7 +134,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem("token")
       if (token) {
-        const res = await axios.get("http://localhost:5000/api/auth/me")
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`)
         setUser({
           id: res.data.id,
           username: res.data.username,
@@ -148,7 +150,7 @@ export const AuthProvider = ({ children }) => {
 
   const markNotificationAsRead = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`)
+      await axios.put(`${API_BASE_URL}/api/notifications/${id}/read`)
       setNotifications((prev) => prev.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif)))
       setUnreadCount((prev) => (prev > 0 ? prev - 1 : 0))
     } catch (error) {
@@ -158,7 +160,7 @@ export const AuthProvider = ({ children }) => {
 
   const markAllNotificationsAsRead = async () => {
     try {
-      await axios.put("http://localhost:5000/api/notifications/read-all")
+      await axios.put(`${API_BASE_URL}/api/notifications/read-all`)
       setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })))
       setUnreadCount(0)
     } catch (error) {
@@ -193,8 +195,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   const isAdmin = () => {
-  return user?.role === "admin"
-}
+    return user?.role === "admin"
+  }
 
   return (
     <AuthContext.Provider

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
-import { Link } from "react-router-dom"
-import styles from "../styles/Admin.module.css"  // Importando CSS modular
+import Link from "next/link"
+import styles from "../styles/Admin.module.css"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
 const AdminDashboard = () => {
   const { user } = useAuth()
@@ -17,7 +19,7 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch("http://localhost:5000/api/admin/dashboard/stats", {
+      const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -72,24 +74,24 @@ const AdminDashboard = () => {
         <div className={styles["action-card"]}>
           <h3>Gestión de Usuarios</h3>
           <p>Administrar usuarios y eliminar cuentas</p>
-          <Link to="/admin/users" className={styles["admin-btn"]}>
-            Gestionar Usuarios
+          <Link href="/admin/users">
+            <a className={styles["admin-btn"]}>Gestionar Usuarios</a>
           </Link>
         </div>
 
         <div className={styles["action-card"]}>
           <h3>Gestión de Publicaciones</h3>
           <p>Moderar y eliminar publicaciones</p>
-          <Link to="/admin/posts" className={styles["admin-btn"]}>
-            Gestionar Posts
+          <Link href="/admin/posts">
+            <a className={styles["admin-btn"]}>Gestionar Posts</a>
           </Link>
         </div>
 
         <div className={styles["action-card"]}>
           <h3>Gestión de Comentarios</h3>
           <p>Moderar y eliminar comentarios</p>
-          <Link to="/admin/comments" className={styles["admin-btn"]}>
-            Gestionar Comentarios
+          <Link href="/admin/comments">
+            <a className={styles["admin-btn"]}>Gestionar Comentarios</a>
           </Link>
         </div>
       </div>

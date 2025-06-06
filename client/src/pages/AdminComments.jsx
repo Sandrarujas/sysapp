@@ -3,20 +3,22 @@
 import { useState, useEffect, useCallback } from "react"
 import styles from "../styles/Admin.module.css"
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+
 const AdminComments = () => {
   const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ total: 0, pages: 1 })
   const [currentPage, setCurrentPage] = useState(1)
   const [users, setUsers] = useState({})
-  const [searchTerm, setSearchTerm] = useState("") // 👈 Búsqueda por nombre
+  const [searchTerm, setSearchTerm] = useState("")
 
   const fetchUsername = useCallback(async (userId) => {
     if (users[userId]) return users[userId]
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/users/id/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/id/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -38,7 +40,7 @@ const AdminComments = () => {
   const fetchComments = useCallback(async (page = 1) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/admin/comments?page=${page}&limit=10`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/comments?page=${page}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -73,7 +75,7 @@ const AdminComments = () => {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/admin/comments/${commentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/comments/${commentId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })

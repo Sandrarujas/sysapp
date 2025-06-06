@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import styles from "../styles/EditProfileModal.module.css"
 
+const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
 
-const BASE_URL = "http://localhost:5000"
 
 const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
   const [bio, setBio] = useState("")
@@ -17,7 +17,7 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
   useEffect(() => {
     if (profile) {
       setBio(profile.bio || "")
-      setPreviewImage(profile.profileImage ? `${BASE_URL}${profile.profileImage}` : "")
+      setPreviewImage(profile.profileImage ? `${API_URL}${profile.profileImage}` : "")
     }
   }, [profile])
 
@@ -35,13 +35,13 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
     setError("")
 
     try {
-      const bioResponse = await axios.put(`${BASE_URL}/api/users/bio`, { bio })
+      const bioResponse = await axios.put(`${API_URL}/api/users/bio`, { bio })
 
       let imageResponse = null
       if (profileImage) {
         const formData = new FormData()
         formData.append("profileImage", profileImage)
-        imageResponse = await axios.put(`${BASE_URL}/api/users/profile-image`, formData, {
+        imageResponse = await axios.put(`${API_URL}/api/users/profile-image`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })
       }

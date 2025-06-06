@@ -4,31 +4,46 @@ import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
 import styles from "../styles/Admin.module.css"
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+
 const AdminUsers = () => {
   const { isAdmin } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ total: 0, pages: 1 })
   const [currentPage, setCurrentPage] = useState(1)
-  const [searchTerm, setSearchTerm] = useState("") // 👈 Nuevo estado
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     fetchUsers(currentPage)
   }, [currentPage])
 
   const fetchUsers = async (page = 1) => {
+    setLoading(true)
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/admin/users?page=${page}&limit=10`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/users?page=${page}&limit=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
 
       if (response.ok) {
         const data = await response.json()
-        setUsers(data)
-        setPagination({ total: data.length, pages: 1 }) // Ajusta si usas paginación real
+        if (data && Array.isArray(data.items)) {
+          setUsers(data.items)
+          setPagination({ total: data.total || data.items.length, pages: data.pages || 1 })
+        } else if (Array.isArray(data)) {
+          // fallback si la API devuelve array directo
+          setUsers(data)
+          setPagination({ total: data.length, pages: 1 })
+        } else {
+          setUsers([])
+          setPagination({ total: 0, pages: 1 })
+        }
       } else {
         const errorText = await response.text()
         console.error("Error en la respuesta:", response.status, errorText)
@@ -41,13 +56,17 @@ const AdminUsers = () => {
   }
 
   const deleteUser = async (userId, username) => {
-    if (!window.confirm(`¿Estás seguro de que quieres eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) {
+    if (
+      !window.confirm(
+        `¿Estás seguro de que quieres eliminar al usuario "${username}"? Esta acción no se puede deshacer.`
+      )
+    ) {
       return
     }
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -59,7 +78,7 @@ const AdminUsers = () => {
         alert("Usuario eliminado correctamente")
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error}`)
+        alert(`Error: ${error.error || "Error al eliminar el usuario"}`)
       }
     } catch (error) {
       console.error("Error deleting user:", error)
@@ -71,7 +90,7 @@ const AdminUsers = () => {
     return <div className={styles["admin-loading"]}>Cargando usuarios...</div>
   }
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -138,10 +157,7 @@ const AdminUsers = () => {
       </div>
 
       <div className={styles["pagination"]}>
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(currentPage - 1)}
-        >
+        <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
           Anterior
         </button>
         <span>

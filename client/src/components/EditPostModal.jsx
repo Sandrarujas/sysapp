@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import styles from "../styles/EditPostModal.module.css"
 
+const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
+
 const EditPostModal = ({ isOpen, onClose, post, onPostUpdate }) => {
   const [content, setContent] = useState("")
   const [image, setImage] = useState(null)
@@ -31,8 +33,8 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdate }) => {
     // Si la ruta ya es una URL completa, devolverla tal cual
     if (imagePath.startsWith("http")) return imagePath
 
-    // Construir la URL completa
-    return `http://localhost:5000${imagePath}`
+    // Construir la URL completa con la variable de entorno
+    return `${API_URL}${imagePath}`
   }
 
   const handleImageChange = (e) => {
@@ -71,7 +73,7 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdate }) => {
         formData.append("image", "")
       }
 
-      const res = await axios.put(`http://localhost:5000/api/posts/${post.id}`, formData, {
+      const res = await axios.put(`${API_URL}/api/posts/${post.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

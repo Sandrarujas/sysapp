@@ -1,41 +1,50 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import axios from "axios"
-import Post from "../components/Post"
-import styles from "../styles/Post.module.css"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import axios from "axios";
+import Post from "../components/Post";
+import styles from "../styles/Post.module.css";
 
 const SinglePost = () => {
-  const { id } = useParams()
-  const [post, setPost] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const navigate = useNavigate()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id"); // Si usas query params, o ajusta según la ruta
+
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchPost = async () => {
       try {
-        setLoading(true)
-        const res = await axios.get(`http://localhost:5000/api/posts/${id}`)
-        setPost(res.data)
-        setLoading(false)
+        setLoading(true);
+        const res = await axios.get(`${baseUrl}/api/posts/${id}`);
+        setPost(res.data);
+        setLoading(false);
       } catch (error) {
-        console.error("Error al cargar la publicación:", error)
-        setError("No se pudo cargar la publicación. Puede que haya sido eliminada o no tengas permiso para verla.")
-        setLoading(false)
+        console.error("Error al cargar la publicación:", error);
+        setError(
+          "No se pudo cargar la publicación. Puede que haya sido eliminada o no tengas permiso para verla."
+        );
+        setLoading(false);
       }
-    }
+    };
 
-    fetchPost()
-  }, [id])
+    fetchPost();
+  }, [id, baseUrl]);
 
   const handleBack = () => {
-    navigate(-1)
-  }
+    router.back();
+  };
 
   if (loading) {
-    return <div className="loading">Cargando publicación...</div>
+    return <div className="loading">Cargando publicación...</div>;
   }
 
   if (error) {
@@ -46,7 +55,7 @@ const SinglePost = () => {
           Volver
         </button>
       </div>
-    )
+    );
   }
 
   if (!post) {
@@ -57,7 +66,7 @@ const SinglePost = () => {
           Volver
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -70,7 +79,7 @@ const SinglePost = () => {
       </div>
       <Post post={post} />
     </div>
-  )
-}
+  );
+};
 
-export default SinglePost
+export default SinglePost;

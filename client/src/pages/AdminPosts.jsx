@@ -3,71 +3,85 @@
 import { useState, useEffect, useCallback } from "react"
 import styles from "../styles/Admin.module.css"
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+
 const AdminPosts = () => {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ total: 0, pages: 1 })
   const [currentPage, setCurrentPage] = useState(1)
   const [users, setUsers] = useState({})
-  const [searchTerm, setSearchTerm] = useState("") // 👈 nuevo estado para filtrar
+  const [searchTerm, setSearchTerm] = useState("")
 
-  const fetchUsername = useCallback(async (userId) => {
-    if (users[userId]) return users[userId]
+  const fetchUsername = useCallback(
+    async (userId) => {
+      if (users[userId]) return users[userId]
 
-    try {
-      const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/users/id/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      try {
+        const token = localStorage.getItem("token")
+        const response = await fetch(`${API_BASE_URL}/api/users/id/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-      if (response.ok) {
-        const userData = await response.json()
-        const username = userData.username || userData.name || `Usuario ${userId}`
-        setUsers(prev => ({ ...prev, [userId]: username }))
-        return username
-      }
-    } catch (error) {
-      console.error(`Error fetching username for ${userId}:`, error)
-    }
-
-    const fallback = `Usuario ${userId}`
-    setUsers(prev => ({ ...prev, [userId]: fallback }))
-    return fallback
-  }, [users])
-
-  const fetchPosts = useCallback(async (page = 1) => {
-    try {
-      const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/admin/posts?page=${page}&limit=10`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (Array.isArray(data)) {
-          setPosts(data)
-          setPagination({ total: data.length, pages: 1 })
-          data.forEach(post => {
-            fetchUsername(post.user_id)
-          })
-        } else {
-          setPosts([])
-          setPagination({ total: 0, pages: 1 })
+        if (response.ok) {
+          const userData = await response.json()
+          const username = userData.username || userData.name || `Usuario ${userId}`
+          setUsers((prev) => ({ ...prev, [userId]: username }))
+          return username
         }
-      } else {
-        const errorText = await response.text()
-        console.error("Error en la respuesta:", response.status, errorText)
+      } catch (error) {
+        console.error(`Error fetching username for ${userId}:`, error)
       }
-    } catch (error) {
-      console.error("Error fetching posts:", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchUsername])
+
+      const fallback = `Usuario ${userId}`
+      setUsers((prev) => ({ ...prev, [userId]: fallback }))
+      return fallback
+    },
+    [users]
+  )
+
+  const fetchPosts = useCallback(
+    async (page = 1) => {
+      setLoading(true)
+      try {
+        const token = localStorage.getItem("token")
+        const response = await fetch(`${API_BASE_URL}/api/admin/posts?page=${page}&limit=10`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data && Array.isArray(data.items)) {
+            setPosts(data.items)
+            setPagination({ total: data.total || data.items.length, pages: data.pages || 1 })
+            data.items.forEach((post) => {
+              fetchUsername(post.user_id)
+            })
+          } else if (Array.isArray(data)) {
+            // fallback if API sends array directly
+            setPosts(data)
+            setPagination({ total: data.length, pages: 1 })
+            data.forEach((post) => fetchUsername(post.user_id))
+          } else {
+            setPosts([])
+            setPagination({ total: 0, pages: 1 })
+          }
+        } else {
+          const errorText = await response.text()
+          console.error("Error en la respuesta:", response.status, errorText)
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchUsername]
+  )
 
   useEffect(() => {
     fetchPosts(currentPage)
@@ -78,7 +92,7 @@ const AdminPosts = () => {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/admin/posts/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/posts/${postId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,6 +112,7 @@ const AdminPosts = () => {
   }
 
   const truncateContent = (content, maxLength = 100) => {
+    if (!content) return ""
     if (content.length <= maxLength) return content
     return content.substring(0, maxLength) + "..."
   }
@@ -126,7 +141,7 @@ const AdminPosts = () => {
       <div className={styles["posts-list"]}>
         {posts && posts.length > 0 ? (
           posts
-            .filter(post => {
+            .filter((post) => {
               const username = users[post.user_id]?.toLowerCase() || ""
               return username.includes(searchTerm.toLowerCase())
             })
@@ -152,7 +167,7 @@ const AdminPosts = () => {
                   {post.image && (
                     <div className={styles["post-image"]}>
                       <img
-                        src={`http://localhost:5000${post.image}`}
+                        src={`${API_BASE_URL}${post.image}`}
                         alt="Post"
                         style={{ maxWidth: "200px", maxHeight: "200px" }}
                       />

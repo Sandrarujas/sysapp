@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation"
 import axios from "axios"
 import styles from "../styles/Notifications.module.css"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([])
@@ -19,14 +21,14 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [showModal, setShowModal] = useState(false)
 
-  const navigate = useNavigate()
+  const router = useRouter()
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         setLoading(true)
         const res = await axios.get(
-          `http://localhost:5000/api/notifications?page=${pagination.page}&limit=${pagination.limit}`
+          `${API_BASE_URL}/api/notifications?page=${pagination.page}&limit=${pagination.limit}`
         )
         setNotifications(res.data.notifications)
         setPagination(res.data.pagination)
@@ -43,7 +45,7 @@ const Notifications = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`)
+      await axios.put(`${API_BASE_URL}/api/notifications/${id}/read`)
       setNotifications(
         notifications.map((notif) =>
           notif.id === id ? { ...notif, isRead: true } : notif
@@ -56,7 +58,7 @@ const Notifications = () => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.put("http://localhost:5000/api/notifications/read-all")
+      await axios.put(`${API_BASE_URL}/api/notifications/read-all`)
       setNotifications(notifications.map((notif) => ({ ...notif, isRead: true })))
     } catch (error) {
       console.error("Error al marcar todas las notificaciones:", error)
@@ -107,7 +109,7 @@ const Notifications = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/placeholder.svg?height=40&width=40"
     if (imagePath.startsWith("http")) return imagePath
-    return `http://localhost:5000${imagePath}`
+    return `${API_BASE_URL}${imagePath}`
   }
 
   const openNotificationModal = (notification) => {
@@ -127,14 +129,14 @@ const Notifications = () => {
     if (selectedNotification) {
       const link = getNotificationLink(selectedNotification)
       closeModal()
-      navigate(link)
+      router.push(link)
     }
   }
 
   const navigateToUserProfile = () => {
     if (selectedNotification) {
       closeModal()
-      navigate(`/profile/${selectedNotification.senderUsername}`)
+      router.push(`/profile/${selectedNotification.senderUsername}`)
     }
   }
 

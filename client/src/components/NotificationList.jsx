@@ -5,6 +5,8 @@ import { Link } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
 import styles from "../styles/Notifications.module.css"
 
+const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
+
 const NotificationList = () => {
   const {
     notifications,
@@ -90,7 +92,7 @@ const NotificationList = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/placeholder.svg?height=40&width=40"
     if (imagePath.startsWith("http")) return imagePath
-    return `http://localhost:5000${imagePath}`
+    return `${API_URL}${imagePath}`
   }
 
   return (

@@ -8,8 +8,9 @@ import CommentList from "./CommentList"
 import EditPostModal from "./EditPostModal"
 import styles from "../styles/Post.module.css" 
 
+const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000"
+
 const Post = ({ post, onPostUpdate, onPostDelete }) => {
-  // ✅ Usar AuthContext para todo
   const {
     user,
     updatePost,
@@ -36,24 +37,21 @@ const Post = ({ post, onPostUpdate, onPostDelete }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null
     if (imagePath.startsWith("http")) return imagePath
-    return `http://localhost:5000${imagePath}`
+    return `${API_URL}${imagePath}`
   }
 
   const handleLike = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/posts/${post.id}/like`)
+      await axios.post(`${API_URL}/api/posts/${post.id}/like`)
       const newLiked = !liked
       const newLikes = liked ? likes - 1 : likes + 1
 
-      // ✅ Actualizar estado local inmediatamente
       setLiked(newLiked)
       setLikes(newLikes)
 
-      // ✅ Actualizar contexto global
       updatePostLikes(post.id, newLiked, newLikes)
     } catch (error) {
       console.error("Error liking post:", error)
-      // Revertir cambios en caso de error
       setLiked(liked)
       setLikes(likes)
     }
@@ -64,18 +62,16 @@ const Post = ({ post, onPostUpdate, onPostDelete }) => {
     if (!commentText.trim()) return
 
     try {
-      const res = await axios.post(`http://localhost:5000/api/posts/${post.id}/comment`, {
+      const res = await axios.post(`${API_URL}/api/posts/${post.id}/comment`, {
         content: commentText,
       })
 
       const newCommentCount = commentCount + 1
 
-      // ✅ Actualizar estado local
       setComments([res.data, ...comments])
       setCommentCount(newCommentCount)
       setCommentText("")
 
-      // ✅ Actualizar contexto global
       updatePostComments(post.id, newCommentCount)
     } catch (error) {
       console.error("Error commenting on post:", error)
@@ -90,7 +86,7 @@ const Post = ({ post, onPostUpdate, onPostDelete }) => {
     if (comments.length === 0 && !showComments) {
       try {
         setLoadingComments(true)
-        const res = await axios.get(`http://localhost:5000/api/posts/${post.id}/comments?limit=5`)
+        const res = await axios.get(`${API_URL}/api/posts/${post.id}/comments?limit=5`)
         setComments(res.data.comments)
         setAllCommentsLoaded(res.data.comments.length >= res.data.pagination.total)
         setLoadingComments(false)
@@ -105,7 +101,7 @@ const Post = ({ post, onPostUpdate, onPostDelete }) => {
     try {
       setLoadingComments(true)
       const page = Math.floor(comments.length / 5) + 1
-      const res = await axios.get(`http://localhost:5000/api/posts/${post.id}/comments?page=${page}&limit=5`)
+      const res = await axios.get(`${API_URL}/api/posts/${post.id}/comments?page=${page}&limit=5`)
 
       setComments([...comments, ...res.data.comments])
       setAllCommentsLoaded(comments.length + res.data.comments.length >= res.data.pagination.total)
@@ -130,12 +126,10 @@ const Post = ({ post, onPostUpdate, onPostDelete }) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar esta publicación?")) {
       try {
         setIsDeleting(true)
-        await axios.delete(`http://localhost:5000/api/posts/${post.id}`)
+        await axios.delete(`${API_URL}/api/posts/${post.id}`)
 
-        // ✅ Actualizar contexto global inmediatamente
         deletePostFromContext(post.id)
 
-        // ✅ Notificar al componente padre
         if (onPostDelete) {
           onPostDelete(post.id)
         }
@@ -149,13 +143,8 @@ const Post = ({ post, onPostUpdate, onPostDelete }) => {
   }
 
   const handlePostUpdate = (updatedPost) => {
-    // ✅ Actualizar estado local
     setImageError(false)
-
-    // ✅ Actualizar contexto global
     updatePost(post.id, updatedPost)
-
-    // ✅ Notificar al componente padre
     if (onPostUpdate) {
       onPostUpdate(updatedPost)
     }
